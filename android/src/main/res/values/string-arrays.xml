@@ -1,31 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 隐藏网络设备分类选项（选项值，不可翻译） -->
     <string-array name="hidden_network_devices" translatable="false">
         <item>current-user</item>
         <item>other-users</item>
         <item>tagged-devices</item>
     </string-array>
+    <!-- 隐藏网络设备分类选项（显示标签，已汉化） -->
     <string-array name="hidden_network_devices_labels" translatable="true">
-        <item>Current user devices</item>
-        <item>Other users devices</item>
-        <item>Tagged devices</item>
+        <item>当前用户的设备</item>
+        <item>其他用户的设备</item>
+        <item>已标记的设备</item>
     </string-array>
+
+    <!-- 出口节点使用策略（选项值，不可翻译） -->
     <string-array name="always_never_userdecides" translatable="false">
         <item>always</item>
         <item>never</item>
         <item>user-decides</item>
     </string-array>
+    <!-- 出口节点使用策略（显示标签，已汉化） -->
     <string-array name="always_never_userdecides_labels" translatable="true">
-        <item>Always</item>
-        <item>Never</item>
-        <item>User Decides</item>
+        <item>始终</item>
+        <item>从不</item>
+        <item>由用户决定</item>
     </string-array>
+
+    <!-- 显示/隐藏选项（选项值，不可翻译） -->
     <string-array name="show_hide" translatable="false">
         <item>show</item>
         <item>hide</item>
     </string-array>
+    <!-- 显示/隐藏选项（显示标签，已汉化） -->
     <string-array name="show_hide_labels" translatable="true">
-        <item>Show</item>
-        <item>Hide</item>
+        <item>显示</item>
+        <item>隐藏</item>
     </string-array>
 </resources>
