@@ -1,182 +1,107 @@
-# Tailscale Android Client
+# Tailscale Android 客户端
 
-https://tailscale.com
+Tailscale 是一款基于 WireGuard® 协议的私有网络（VPN）工具，可帮助您轻松、安全地连接所有设备。本仓库包含 Tailscale Android 客户端的开源代码。
 
-Private WireGuard® networks made easy
+项目主页：[https://tailscale.com](https://tailscale.com)
 
-## Overview
+---
 
-This repository contains the open source Tailscale Android client.
+## 概述
 
-## Using
+本仓库提供了 Tailscale Android 客户端的完整源代码，支持通过多种方式构建和安装。
 
-#### Tailscale Packages
+---
 
-The latest stable release APK can be obtained from the [Tailscale Packages Stable Track](https://pkgs.tailscale.com/stable/#android).
+## 获取官方版本
 
-Unstable releases can be obtained from the [Tailscale Packages Unstable Track](https://pkgs.tailscale.com/unstable/#android).
+如果您不想自行编译，可通过以下渠道获取官方构建的 APK：
 
-These APKs include all supported platforms and architectures.  For installing compact APKs, Android TV, or if you want automatic updates, visit the [Google Play Store](https://play.google.com/store/apps/details?id=com.tailscale.ipn).
+- **Google Play**：[点击安装](https://play.google.com/store/apps/details?id=com.tailscale.ipn)
+- **Beta 测试版**：[Play Store 测试通道](https://play.google.com/apps/testing/com.tailscale.ipn)
+- **Amazon Appstore**（适用于 Fire 平板和 Fire TV 设备）：[点击下载](https://www.amazon.com/dp/B0D38TRB3N)
+- **F-Droid**：[F-Droid 仓库](https://f-droid.org/packages/com.tailscale.ipn/)
 
-#### Google Playstore
+> **注意**：F-Droid 版本由社区构建，Tailscale 团队不负责其发布、更新或验证。
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
-     alt="Get it on Google Play"
-     height="80">](https://play.google.com/store/apps/details?id=com.tailscale.ipn)
+---
 
-Help us test new features and bug-fixes before they ship to all users! A [beta testing track](https://play.google.com/apps/testing/com.tailscale.ipn) is available on the Play Store. 
+## 构建环境准备
 
-#### Amazon Appstore
+构建本应用需要以下环境：
 
-The app can be downloaded from the [Amazon Appstore](https://www.amazon.com/dp/B0D38TRB3N) for Amazon Fire tablets and Fire TV devices.
-
-#### F-Droid
-
-The [F-Droid](https://f-droid.org/packages/com.tailscale.ipn/) project builds the source code in this repository and maintains independently-built APKs. Note that F-Droid builds are not released, updated, or verified by the Tailscale team.
-
-## Preparing a build environment
-
-There are several options for setting up a build environment. The Android Studio
-path is the most useful path for longer term development.
-
-In all cases you will need:
-
-- Go runtime
+- Go 运行时（[下载地址](https://go.dev/dl/)）
 - Android SDK
-- Android SDK components (`make androidsdk` will install them)
+- Android SDK 组件（执行 `make androidsdk` 可自动安装）
 
-### Android Studio
+### 方式一：Android Studio（推荐用于长期开发）
 
-1. Install a Go runtime (https://go.dev/dl/).
-2. Install Android Studio (https://developer.android.com/studio).
-3. Start Android Studio, from the Welcome screen select "More Actions" and "SDK Manager".
-4. In the SDK manager, select the "SDK Tools" tab and install the "Android SDK Command-line Tools (latest)".
-3. Run `make androidsdk` to install the necessary SDK components.
+1. 安装 Go 运行时（[https://go.dev/dl/](https://go.dev/dl/)）。
+2. 安装 Android Studio（[https://developer.android.com/studio](https://developer.android.com/studio)）。
+3. 启动 Android Studio，在欢迎界面选择 **“More Actions”** → **“SDK Manager”**。
+4. 在 **“SDK Tools”** 选项卡中，安装 **“Android SDK Command-line Tools (latest)”**。
+5. 在项目根目录执行以下命令，安装必要的 SDK 组件：
+    
+    make androidsdk
 
-If you would prefer to avoid Android Studio, you can also install an Android
-SDK. The makefile detects common paths, so `sudo apt install android-sdk` is
-sufficient on Debian / Ubuntu systems. To use an Android SDK installed in a
-non-standard location, set the `ANDROID_SDK_ROOT` environment variable to the
-path to the SDK.
+**非标准路径配置**：若 Android SDK 安装在非默认路径，请设置环境变量 `ANDROID_SDK_ROOT` 指向 SDK 目录。若已安装 Android Studio 但工具链不在 PATH 中，可执行 `make androidpath` 获取正确路径并导出。
 
-If you installed Android Studio the tools may not be in your path. To get the
-correct tool path, run `make androidpath` and export the provided path in your
-shell.
+**代码格式化**：项目使用 ktfmt 插件进行代码格式化（默认配置）。建议在 Android Studio 中启用 **“Format on Save”** 功能，以自动格式化 Java、Kotlin 和 XML 文件。
 
-#### Code Formatting
+### 方式二：Docker（适用于隔离环境）
 
-The ktmft plugin on the default setting should be used to autoformat all Java, Kotlin
-and XML files in Android Studio.  Enable "Format on Save".
+若希望避免在宿主机安装依赖，可使用 Docker 开发环境：
 
-### Docker
+    make docker-shell
 
-If you wish to avoid installing software on your host system, a Docker based development strategy is available, you can build and start a shell with:
+其他 Docker 相关构建命令请参考 Makefile。Docker 镜像名称可在 Makefile 中自定义，修改后需重建缓存镜像。
 
-```sh
-make docker-shell
-```
+### 方式三：Nix（适用于 Nix 用户）
 
-Several other makefile recipes are available for setting up the proper build environment and running builds.
+若已安装 Nix 2.4 或更高版本，可使用以下命令进入开发环境：
 
-Note that the docker makefile recipes s will preserve the image and remove container on completion.
-If changes are made to the build environment or toolchain, cached docker images may need to be rebuilt.
-The docker build image name is parameterized in the makefile and changing it provides a simple means to do this.
+    alias nix='nix --extra-experimental-features "nix-command flakes"'
+    nix develop
 
-### Nix
+---
 
-If you have Nix 2.4 or later installed, a Nix development environment can
-be set up with:
+## 构建 APK
 
-```sh
-alias nix='nix --extra-experimental-features "nix-command flakes"'
-nix develop
-```
+在项目根目录执行以下命令：
 
-The flake provides host tools such as Java, `make`, `curl`, and `git`, and
-points the build at a repo-local Android SDK in `./android-sdk`. The SDK
-directory is ignored by Git and is reused across builds.
+    make apk          # 构建 APK
+    make install      # 安装到已连接的 Android 设备
 
-On first use, install the Android SDK components:
+---
 
-```sh
-make androidsdk
-```
+## 发布版本
 
-Then build normally:
+执行以下命令可自动更新版本号并打标签：
 
-```sh
-make tailscale-debug
-```
+    make tag_release
 
-The debug APK is written to `./tailscale-debug.apk`.
+该命令会：
+- 增加 Android 版本代码（versionCode）
+- 更新版本名称（versionName）
+- 为当前提交创建 Git 标签
 
-For one-shot commands without entering an interactive shell:
+---
 
-```sh
-nix develop --command make androidsdk
-nix develop --command make tailscale-debug
-```
+## 技术说明
 
-For faster Kotlin-only iteration while avoiding the `gomobile bind` step:
+- **Go 版本要求**：项目仅保证支持最新的 Go 稳定版及 Go 测试版/候选版（当前为 Go 1.x）。早期 Go 版本或 GOPATH 模式可能无法正常工作，官方不提供支持。
+- **Fire TV 开发**：在 Fire TV 设备上调试时，需在设备端开启 ADB 调试（路径：Settings → My Fire TV → Developer Options → ADB Debugging → ON）。常用 ADB 命令请参考官方文档。
 
-```sh
-nix develop --command bash -lc 'cd android && ./gradlew ktfmtCheck compileDebugKotlin'
-```
+---
 
-## Building
+## 许可证
 
-```sh
-make apk
-make install
-```
+本项目基于 BSD 协议开源，详见 [LICENSE](LICENSE) 文件。
 
-## Building a release
+---
 
-Use `make tag_release` to stamp the Play Store version code, update the version
-name, and tag the current commit. The version code is derived from wall-clock
-time (minutes since the Unix epoch) at release time and committed into
-`android/build.gradle`, so it increases monotonically across all builds and
-branches while staying fixed for any given commit.
+## 贡献指南
 
-We only guarantee to support the latest Go release and any Go beta or
-release candidate builds (currently Go 1.14) in module mode. It might
-work in earlier Go versions or in GOPATH mode, but we're making no
-effort to keep those working.
-
-## Developing on a Fire Stick TV
-
-On the Fire Stick:
-
-* Settings > My Fire TV > Developer Options > ADB Debugging > ON
-
-Then some useful commands:
-```
-adb connect 10.2.200.213:5555
-adb install -r tailscale-fdroid.apk
-adb shell am start -n com.tailscale.ipn/com.tailscale.ipn.MainActivity
-adb shell pm uninstall com.tailscale.ipn
-```
-
-## Bugs
-
-Please file any issues about this code or the hosted service on
-[the tailscale issue tracker](https://github.com/tailscale/tailscale/issues).
-
-## Contributing
-
-`under_construction.gif`
-
-PRs welcome, but we are still working out our contribution process and
-tooling.
-
-We require [Developer Certificate of
-Origin](https://en.wikipedia.org/wiki/Developer_Certificate_of_Origin)
-`Signed-off-by` lines in commits.
-
-## About Us
-
-We are [Tailscale](https://tailscale.com). See
-https://tailscale.com/company for more about us and what we're
-building.
-
-WireGuard is a registered trademark of Jason A. Donenfeld.
+欢迎提交 Issue 和 Pull Request。提交代码前请确保：
+- 代码已通过 `ktfmt` 格式化
+- 所有测试用例通过
+- 提交信息清晰描述变更内容
