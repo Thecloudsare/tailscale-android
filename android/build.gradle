@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2020 Tailscale Inc & AUTHORS All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ *
+ * 本文件已适配标准 Go 1.24+ 构建环境。
+ * NDK 版本已升级至 26.3.11579264。
+ * 支持两种 AAR 加载模式：
+ *   1. 默认：从 android/libs/ 加载预编译 AAR（推荐）
+ *   2. 可选：通过 useInternalMake=true 触发 Makefile.simple 自动生成
+ */
+
 buildscript {
     ext.kotlin_version = "1.9.22"
     ext.compose_version = "1.5.10"
@@ -31,32 +43,35 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.plugin.serialization'
 apply plugin: 'com.ncorti.ktfmt.gradle'
 
+// ============================================================================
+// 构建模式开关
+// - useInternalMake = true  : Gradle 自动调用 Makefile.simple 生成 AAR
+// - useInternalMake = false : 直接从 libs/ 加载预编译 AAR（默认，推荐）
+// ============================================================================
+ext {
+    useInternalMake = false
+}
+
 android {
     def androidApiLevel = providers.gradleProperty("androidApiLevel").get().toInteger()
 
-    ndkVersion "23.1.7779620"
+    // NDK 版本已升级至 26.3.11579264，以兼容 gomobile 官方推荐
+    ndkVersion "26.3.11579264"
     compileSdkVersion androidApiLevel
+
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion androidApiLevel
 
-        // VERSION_CODE_BASE is minutes since the Unix epoch, times 10. The
-        // final digit is reserved for the platform: 0 for phone/tablet and 1
-        // for Android TV. Release builds pass VERSION_CODE_BASE from the
-        // Makefile so both variants share the same base. Other builds fall
-        // back to the current time so local/debug Gradle invocations continue
-        // to work without extra arguments.
+        // VERSION_CODE_BASE 为分钟级时间戳 * 10，末位保留给平台标识
+        // 0 = 手机/平板，1 = Android TV
         versionCode computeVersionCode()
         versionName getVersionProperty("VERSION_LONG")
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // This setting, which defaults to 'true', will cause Tailscale to fall
-        // back to the Google DNS servers if it cannot determine what the
-        // operating system's DNS configuration is.
-        //
-        // Set it to false either here or in your local.properties file to
-        // disable this behaviour.
-        buildConfigField "boolean", "USE_GOOGLE_DNS_FALLBACK", getLocalProperty("tailscale.useGoogleDnsFallback", "true")
+        buildConfigField "boolean", "USE_GOOGLE_DNS_FALLBACK",
+            getLocalProperty("tailscale.useGoogleDnsFallback", "true")
     }
 
     compileOptions {
@@ -72,16 +87,15 @@ android {
         jvmTarget = "17"
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         buildConfig true
         compose true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "$compose_version"
     }
+
     flavorDimensions "version"
     namespace 'com.tailscale.ipn'
 
@@ -89,23 +103,22 @@ android {
         applicationTest {
             initWith debug
             manifestPlaceholders.leanbackRequired = isTV()
-            buildConfigField "String", "GITHUB_USERNAME", "\"" + getLocalProperty("githubUsername", "")+"\""
-            buildConfigField "String", "GITHUB_PASSWORD", "\"" + getLocalProperty("githubPassword", "")+"\""
-            buildConfigField "String", "GITHUB_2FA_SECRET", "\"" + getLocalProperty("github2FASecret", "")+"\""
+            buildConfigField "String", "GITHUB_USERNAME",
+                "\"" + getLocalProperty("githubUsername", "") + "\""
+            buildConfigField "String", "GITHUB_PASSWORD",
+                "\"" + getLocalProperty("githubPassword", "") + "\""
+            buildConfigField "String", "GITHUB_2FA_SECRET",
+                "\"" + getLocalProperty("github2FASecret", "") + "\""
         }
         debug {
             manifestPlaceholders.leanbackRequired = isTV()
         }
         release {
             manifestPlaceholders.leanbackRequired = isTV()
-
             minifyEnabled true
-
             shrinkResources true
-
-            proguardFiles getDefaultProguardFile(
-                    'proguard-android-optimize.txt'),
-                    'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                'proguard-rules.pro'
         }
     }
 
@@ -113,7 +126,10 @@ android {
 }
 
 dependencies {
-    // Android dependencies.
+    // 从 libs 目录加载预编译 AAR（默认方式）
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+    // Android 核心库
     implementation "androidx.core:core:1.13.1"
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation "androidx.browser:browser:1.8.0"
@@ -121,7 +137,7 @@ dependencies {
     implementation "androidx.work:work-runtime:2.9.1"
     implementation "androidx.work:work-runtime-ktx:2.9.1"
 
-    // Kotlin dependencies.
+    // Kotlin 依赖
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
     implementation 'junit:junit:4.13.2'
@@ -130,7 +146,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
-    // Compose dependencies.
+    // Compose UI
     def composeBom = platform('androidx.compose:compose-bom:2024.09.03')
     implementation composeBom
     implementation 'androidx.compose.material3:material3:1.3.0'
@@ -144,33 +160,31 @@ dependencies {
     implementation "androidx.core:core-splashscreen:1.1.0-rc01"
     implementation "androidx.compose.animation:animation:1.7.4"
 
-    // Navigation dependencies.
+    // Navigation
     def nav_version = "2.8.5"
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
-    // Supporting libraries.
+    // 工具库
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.google.zxing:core:3.5.1")
     implementation("com.patrykandpatrick.vico:compose:1.15.0")
     implementation("com.patrykandpatrick.vico:compose-m3:1.15.0")
 
-    // Tailscale dependencies.
+    // Tailscale AAR（通过 flatDir 加载）
     implementation ':libtailscale@aar'
 
-    // Integration Tests
+    // Android 集成测试
     androidTestImplementation composeBom
     androidTestImplementation 'androidx.test:runner:1.6.2'
     androidTestImplementation 'androidx.test.ext:junit-ktx:1.2.1'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
     implementation 'androidx.test.uiautomator:uiautomator:2.3.0'
-
-    // Authentication only for tests
     androidTestImplementation 'dev.turingcomplete:kotlin-onetimepassword:2.4.0'
     androidTestImplementation 'commons-codec:commons-codec:1.16.1'
 
-    // Unit Tests
+    // 单元测试
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
@@ -181,21 +195,34 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
 }
 
-def getLocalProperty(key, defaultValue) {
+// ============================================================================
+// 可选：当 useInternalMake == true 时，自动调用 Makefile.simple 生成 AAR
+// ============================================================================
+if (useInternalMake) {
+    task generateAar(type: Exec) {
+        description = '使用 Makefile.simple 生成 libtailscale.aar'
+        workingDir rootProject.projectDir
+        commandLine 'make', '-f', 'Makefile.simple', 'aar'
+    }
+    preBuild.dependsOn generateAar
+}
+
+// ============================================================================
+// 辅助函数
+// ============================================================================
+
+def getLocalProperty(String key, String defaultValue) {
     try {
         Properties properties = new Properties()
         properties.load(project.file('local.properties').newDataInputStream())
         return properties.getProperty(key) ?: defaultValue
-    } catch(Throwable ignored) {
+    } catch (Throwable ignored) {
         return defaultValue
     }
 }
 
-
-def getVersionProperty(key) {
-    // tailscale.version is created / updated by the makefile, it is in a loosely
-    // Makfile/envfile format, which is also loosely a properties file format.
-    //      make tailscale.version
+def getVersionProperty(String key) {
+    // tailscale.version 由 Makefile 生成，格式兼容 Properties 文件
     def versionProps = new Properties()
     versionProps.load(project.file('../tailscale.version').newDataInputStream())
     return versionProps.getProperty(key).replaceAll('^"|"$', '')
@@ -203,17 +230,11 @@ def getVersionProperty(key) {
 
 def computeVersionCode() {
     def baseProperty = project.findProperty('VERSION_CODE_BASE')
-
-    // Direct/local Gradle invocations may not come through the Makefile. Keep
-    // those builds working by deriving a monotonic base from wall-clock time.
+    // 直接 Gradle 调用时（非 Makefile 触发），使用当前时间作为基数
     def base = baseProperty != null
             ? baseProperty as long
             : (System.currentTimeMillis() / 60000L) * 10L
-
-    // 0 for Android, 1 for Android TV. This keeps the two binaries distinguishable
-    // in the Play Store while sharing a release base.
     def platform = isTV() ? 1 : 0
-
     return (base + platform) as int
 }
 
