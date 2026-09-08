@@ -1,6 +1,6 @@
 module github.com/tailscale/tailscale-android
 
-go 1.27.1
+go 1.24
 
 require (
 	github.com/tailscale/wireguard-go v0.0.0-20260821191448-23d18d66172c
@@ -61,7 +61,7 @@ require (
 	github.com/mdlayher/sdnotify v1.0.0 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
-	github.com/pierrec/lz4/v4 v4.1.26 // indirect
+	github.com/pierrec/lz4/v4 v1.4.26 // indirect
 	github.com/pires/go-proxyproto v0.8.1 // indirect
 	github.com/safchain/ethtool v0.3.0 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20260409135935-3638fb84b77d // indirect
